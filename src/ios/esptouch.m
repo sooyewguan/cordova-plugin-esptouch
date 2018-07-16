@@ -11,10 +11,12 @@
 -(void) onEsptouchResultAddedWithResult: (ESPTouchResult *) result
 {
     NSString *InetAddress=[ESP_NetUtil descriptionInetAddr4ByData:result.ipAddrData];
-    NSString *text=[NSString stringWithFormat:@"bssid=%@,InetAddress=%@",result.bssid,InetAddress];
+    //NSString *text=[NSString stringWithFormat:@"bssid=%@,InetAddress=%@",result.bssid,InetAddress];
+    NSString *text=[NSString stringWithFormat:@"{\"status\":\"found\",\"bssid\":\"%@\",\"host\":\"%@\"}",result.bssid, InetAddress];
     CDVPluginResult* pluginResult = nil;
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: text];
     [pluginResult setKeepCallbackAsBool:true];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
 }
 @end
 
@@ -40,6 +42,7 @@
         NSLog(@"ssid: %@, bssid: %@, apPwd: %@", apSsid, apBssid, apPwd);
         //        self._esptouchTask =
         //        [[ESPTouchTask alloc]initWithApSsid:apSsid andApBssid:apBssid andApPwd:apPwd andIsSsidHiden:isSsidHidden]; // deprecated
+        
         self._esptouchTask =
         [[ESPTouchTask alloc]initWithApSsid:apSsid andApBssid:apBssid andApPwd:apPwd];
         EspTouchDelegateImpl *esptouchDelegate=[[EspTouchDelegateImpl alloc]init];
@@ -53,17 +56,19 @@
             // show the result to the user in UI Main Thread
             dispatch_async(dispatch_get_main_queue(), ^{
                 
-                
                 ESPTouchResult *firstResult = [esptouchResultArray objectAtIndex:0];
                 // check whether the task is cancelled and no results received
                 if (!firstResult.isCancelled)
                 {
                     if ([firstResult isSuc])
                     {   
-                        ESPTouchResult *resultInArray = [esptouchResultArray objectAtIndex:0];
-                        NSString *ipaddr = [ESP_NetUtil descriptionInetAddr4ByData:resultInArray.ipAddrData];
+                        //ESPTouchResult *resultInArray = [esptouchResultArray objectAtIndex:0];
+                        //NSString *ipaddr = [ESP_NetUtil descriptionInetAddr4ByData:resultInArray.ipAddrData];
                         // device0 I think is suppose to be the index
-                        NSString *result = [NSString stringWithFormat:@"Finished: device0,bssid=%@,InetAddress=%@.", resultInArray.bssid, ipaddr];
+                        //NSString *result = [NSString stringWithFormat:@"Finished: device0,bssid=%@,InetAddress=%@.", resultInArray.bssid, ipaddr];
+                        NSUInteger count = [esptouchResultArray count];
+                        NSString *result = [NSString stringWithFormat:@"{\"status\":\"done\", \"total\":\"%lu\"}", count];
+                        
                         CDVPluginResult* pluginResult = nil;
                         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:result];
                         
@@ -73,7 +78,7 @@
                     else
                     {
                         CDVPluginResult* pluginResult = nil;
-                        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"Esptouch fail"];
+                        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"{\"status\":\"error\", \"total\":\"0\"}"];
                         [pluginResult setKeepCallbackAsBool:true];
                         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
                     }
@@ -83,7 +88,6 @@
         });
     }];
 }
-
 
 - (void) stop:(CDVInvokedUrlCommand *)command{
     [self._condition lock];
