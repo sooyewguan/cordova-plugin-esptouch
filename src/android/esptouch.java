@@ -60,7 +60,7 @@ public class esptouch extends CordovaPlugin {
                         int count = 0;
                         final int maxDisplayCount = taskResultCount;
                         if (firstResult.isSuc()) {
-                            StringBuilder sb = new StringBuilder();
+                            /*StringBuilder sb = new StringBuilder();
                             for (IEsptouchResult resultInList : resultList) {
                                 sb.append("device" + count + ",bssid=" + resultInList.getBssid() + ",InetAddress="
                                         + resultInList.getInetAddress().getHostAddress() + ".");
@@ -73,14 +73,19 @@ public class esptouch extends CordovaPlugin {
                                 sb.append("\nthere's " + (resultList.size() - count)
                                         + " more resultList(s) without showing\n");
                             }
-                            PluginResult result = new PluginResult(PluginResult.Status.OK, "Finished: " + sb);
-                            result.setKeepCallback(true); // keep callback after this call
+                            PluginResult result = new PluginResult(PluginResult.Status.OK, "Finished: " + sb);*/
+                            String text = "{\"status\":\"done\", \"total\":\"" + resultList.size() + "\"}";
+                            PluginResult result = new PluginResult(PluginResult.Status.OK, text);
+                            result.setKeepCallback(false); // keep callback after this call
                             receivingCallbackContext.sendPluginResult(result);
                             //receivingCallbackContext.success("finished");
                         } else {
-                            PluginResult result = new PluginResult(PluginResult.Status.ERROR, "No Device Found!");
-                            result.setKeepCallback(true); // keep callback after this call
+                            String text = "{\"status\":\"error\", \"total\":\"0\"}";
+                            PluginResult result = new PluginResult(PluginResult.Status.ERROR, text);
+                            result.setKeepCallback(false); // keep callback after this call
                             receivingCallbackContext.sendPluginResult(result);
+                            //receivingCallbackContext.success("finished");
+
                         }
                     }
                 }
@@ -90,12 +95,12 @@ public class esptouch extends CordovaPlugin {
         } else if (action.equals("stop")) {
             mEsptouchTask.interrupt();
             PluginResult result = new PluginResult(PluginResult.Status.OK, "Cancel Success");
-            result.setKeepCallback(true); // keep callback after this call
+            result.setKeepCallback(false); // keep callback after this call
             receivingCallbackContext.sendPluginResult(result);
             return true;
         } 
         else {
-            callbackContext.error("can not find the function " + action);
+            callbackContext.error("Can not find the function " + action);
             return false;
         }
     }
@@ -104,10 +109,10 @@ public class esptouch extends CordovaPlugin {
     private IEsptouchListener myListener = new IEsptouchListener() {
         @Override
         public void onEsptouchResultAdded(final IEsptouchResult result) {
-            String text = "bssid=" + result.getBssid() + ",InetAddress=" + result.getInetAddress().getHostAddress();
+            String text = "{\"status\":\"found\",\"bssid\":\"" + result.getBssid() + "\", \"host\":\"" + result.getInetAddress().getHostAddress() + "\"}";
             PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, text);
             pluginResult.setKeepCallback(true); // keep callback after this call
-            //receivingCallbackContext.sendPluginResult(pluginResult);    //modified by lianghuiyuan
+            receivingCallbackContext.sendPluginResult(pluginResult);    //modified by lianghuiyuan
         }
     };
 }
